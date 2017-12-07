@@ -39,6 +39,7 @@ public class SqlUtils {
             insertIntoBusiness(obj, connection);
             insertIntoCategory(obj, connection);
             insertIntoAttribute(obj, connection);
+            insertIntoHours(obj, connection);
         }
         bufferedReader.close();
         fileReader.close();
@@ -50,16 +51,43 @@ public class SqlUtils {
         String city = obj.getString("city");
         String state = obj.getString("state");
         String name = obj.getString("name");
+        String address = obj.getString("full_address").replaceAll("'", "''");
         Double stars = obj.getDouble("stars");
+        int review_cnt = obj.getInt("review_count");
 
-        String query = "INSERT INTO BUSINESS VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT INTO BUSINESS VALUES (?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, business_id);
         statement.setString(2, city);
         statement.setString(3, state);
         statement.setString(4, name);
         statement.setDouble(5, stars);
+        statement.setString(6, address);
+        statement.setInt(7, review_cnt);
         statement.executeUpdate();
+        statement.close();
+    }
+
+    public static void insertIntoHours (JSONObject obj, Connection connection) throws JSONException, SQLException {
+        JSONObject hours = obj.getJSONObject("hours");
+        if (hours == null) {
+            return;
+        }
+        Iterator<?> keys = hours.keys();
+        String business_id = obj.getString("business_id");
+        String query = "INSERT INTO HOURS VALUES (?, ?, ?, ?)";
+        PreparedStatement statement = connection.prepareStatement(query);
+        while (keys.hasNext()) {
+            String day = (String) keys.next();
+            JSONObject fromToTime = hours.getJSONObject(day);
+            String fromTime = fromToTime.getString("open");
+            String toTime = fromToTime.getString("close");
+            statement.setString(1, business_id);
+            statement.setString(2, day);
+            statement.setString(3, fromTime);
+            statement.setString(4, toTime);
+            statement.executeUpdate();
+        }
         statement.close();
     }
 
@@ -232,24 +260,36 @@ public class SqlUtils {
         return connection;
     }
 
-    public static List<String> executeQuery(Connection connection, String sql, int numOfResColumns) throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(sql);
-        List<String> results = dealWithResultSets(resultSet, numOfResColumns);
-        statement.close();
-        return results;
-    }
-
-    private static List<String> dealWithResultSets (ResultSet resultSet, int numOfResColumns) throws SQLException {
+    private static List<String> dealWithResultSets (ResultSet resultSet, int numOfResColumns, String separator) throws SQLException {
         List<String> results = new ArrayList<>();
         while (resultSet.next()) {
             String[] tempRes = new String[numOfResColumns];
             for (int i = 0; i < numOfResColumns; ++i) {
                 tempRes[i] = resultSet.getString(i + 1);
             }
-            String resJoin = ToolUtils.join(ToolUtils.SEPERATOR, tempRes);
+            String resJoin = join(separator, tempRes);
             results.add(resJoin);
         }
+        return results;
+    }
+
+    private static String join(String delimiter, String[] sequence) {
+        StringBuilder res = new StringBuilder();
+        int length = sequence.length;
+        for (int i = 0; i < length; i++) {
+            res.append(sequence[i]);
+            if (i < length - 1) {
+                res.append(delimiter);
+            }
+        }
+        return res.toString();
+    }
+
+    public static List<String> executeQuery(Connection connection, String sql, int numOfResColumns, String separator) throws SQLException {
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        List<String> results = dealWithResultSets(resultSet, numOfResColumns, separator);
+        statement.close();
         return results;
     }
 }

@@ -12,15 +12,32 @@ public class Yelp extends Observable{
     private ArrayList<String> subCategories;
     private ArrayList<String> attributes;
     private ArrayList<String> locations;
-    private ArrayList<String> states;
     private String location;
+    private String city;
+    private String state;
+    private String day;
+    private String fromTime;
+    private String toTime;
     private String label = "";
+    private String business = "";
 
     public Yelp() {
         mainCategories = new ArrayList<>();
         subCategories = new ArrayList<>();
         attributes = new ArrayList<>();
         locations = new ArrayList<>();
+        location = "";
+        day = "";
+        fromTime = "";
+        toTime = "";
+    }
+
+    public String getBusiness() {
+        return business;
+    }
+
+    public void setBusiness(String business) {
+        this.business = business;
     }
 
     public ArrayList<String> getMainCategories() {
@@ -73,10 +90,61 @@ public class Yelp extends Observable{
     }
 
     public void setLocation(String location) {
-        label = ModelUtils.LABEL_ADDRESS;
+        label = ModelUtils.LABEL_TIME;
         this.location = location;
+        this.city = location.split(",")[0].trim();
+        this.state = location.split(",")[1].trim();
         setChanged();
         notifyObservers();
+    }
+
+    public String getDay() {
+        return day;
+    }
+
+    public void setDay(String day) {
+        label = ModelUtils.LABEL_TIME;
+        this.day = day;
+        setChanged();
+        notifyObservers();
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getToTime() {
+        return toTime;
+    }
+
+    public void setToTime(String toTime) {
+        label = ModelUtils.LABEL_TIME;
+        this.toTime = toTime;
+        setChanged();
+        notifyObservers();
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public String getFromTime() {
+        return fromTime;
+    }
+
+    public void setFromTime(String fromTime) {
+        label = ModelUtils.LABEL_TIME;
+        this.fromTime = fromTime;
+        setChanged();
+        notifyObservers();
+    }
+
+    public String getState() {
+        return state;
     }
 
     public String getLabel() {
